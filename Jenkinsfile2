@@ -1,0 +1,44 @@
+
+pipeline {
+    agent any
+
+    stages {
+        stage('Checkout') {
+            steps {
+                echo 'Source code checked out from GitHub'
+            }
+        }
+
+        stage('Validate Website') {
+            steps {
+                sh '''
+                    set -eu
+                    test -s index.html
+                    test -s style.css
+                    grep -qi '<html' index.html
+                    echo "Website validation successful"
+                '''
+            }
+        }
+
+        stage('Deploy Website') {
+            steps {
+                sh '''
+                    set -eu
+                    sudo /usr/bin/install -o www-data -g www-data -m 644 index.html /var/www/jenkins-static/index.html
+                    sudo /usr/bin/install -o www-data -g www-data -m 644 style.css /var/www/jenkins-static/style.css
+                    echo "Website deployment successful"
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'SUCCESS: Static website deployed!'
+        }
+        failure {
+            echo 'FAILURE: Check the Jenkins console output.'
+        }
+    }
+}
